@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VibeStreak Social AR</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #ui { position: absolute; z-index: 1000; bottom: 20px; left: 20px; background: rgba(255,255,255,0.8); padding: 15px; border-radius: 10px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h3>VibeStreak AR Room</h3>
+        <p>My ID: <b id="my-id">...</b></p>
+        <input type="text" id="friend-id" placeholder="Paste Friend's ID">
+        <button onclick="connectToFriend()">Call Friend</button>
+    </div>
+
+    <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-assets>
+            <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+        </a-assets>
+
+        <a-camera active="false" position="0 0 0"></a-camera>
+
+        <a-entity mindar-face-target="anchorIndex: 168">
+            <a-gltf-model src="#glassesModel" rotation="0 0 0" position="0 0 0" scale="0.01 0.01 0.01"></a-gltf-model>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const peer = new Peer(); // Create a new Peer connection
+        
+        // Show your unique ID
+        peer.on('open', (id) => {
+            document.getElementById('my-id').innerText = id;
+        });
+
+        // When a friend calls you
+        peer.on('call', (call) => {
+            navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
+                call.answer(stream); // Send your face to them
+                call.on('stream', (remoteStream) => {
+                    // This is where you'd show the friend's video in a separate box
+                    console.log("Friend connected!");
+                });
+            });
+        });
+
+        // Function to call your friend
+        function connectToFriend() {
+            const id = document.getElementById('friend-id').value;
+            navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
+                const call = peer.call(id, stream);
+                console.log("Calling friend...");
+            });
+        }
+    </script>
+</body>
+</html>
