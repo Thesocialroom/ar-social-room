@@ -14,6 +14,20 @@
         button { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
+<script>
+    function showGlasses(pairNumber) {
+        const pair1 = document.querySelector('#firstPair');
+        const pair2 = document.querySelector('#secondPair');
+
+        if (pairNumber === 1) {
+            pair1.setAttribute('visible', 'true');
+            pair2.setAttribute('visible', 'false');
+        } else {
+            pair1.setAttribute('visible', 'false');
+            pair2.setAttribute('visible', 'true');
+        }
+    }
+</script>
 <body>
 
     <div id="ui">
@@ -22,16 +36,22 @@
         <input type="text" id="friend-id" placeholder="Paste Friend's ID">
         <button onclick="connectToFriend()">Call Friend</button>
     </div>
+    <div style="position: absolute; z-index: 1000; bottom: 30px; left: 50%; transform: translatex(-50%); display: flex; gap: 10px;">
+        <button onclick="showGlasses(1)" style="padding: 10px;">style 1</button>
+        <button onclick="showGlasses(2)" style="padding: 10px;">style 2</button>
+    </div>"
 
     <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         <a-assets>
-            <a-asset-item id="glassesModel" src="assets/glasses.glb"></a-asset-item>
+            <a-asset-item id="glasses1" src="assets/glasses1.glb"></a-asset-item>
+            <a-asset-item id="glasses2" src="assets/glasses2.glb"></a-asset-item>
         </a-assets>
 
         <a-camera active="false" position="0 0 0"></a-camera>
 
         <a-entity mindar-face-target="anchorIndex: 168">
-            <a-gltf-model src="#glassesModel" rotation="0 0 0" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005"></a-gltf-model>
+            <a-gltf-model id="firstpair" src="#glasses1" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005" visible="true"></a-gltf-model>
+            <a-gltf-model id="secondpair" src="#glasses2" position="0 0 0" scale="1 1 1" visible="false"></a-gltf-model>
         </a-entity>
     </a-scene>
 
