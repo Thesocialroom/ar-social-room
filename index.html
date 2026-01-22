@@ -30,58 +30,52 @@
 </script>
 <body>
 
-    <div id="ui">
-        <h3>VibeStreak AR Room</h3>
-        <p>My ID: <b id="my-id">...</b></p>
-        <input type="text" id="friend-id" placeholder="Paste Friend's ID">
-        <button onclick="connectToFriend()">Call Friend</button>
+    <div id="ui-container" style="position: absolute; z-index: 1000; width: 100%; bottom: 20px; text-align: center;">
+    
+    <div style="margin-bottom: 20px;">
+        <button onclick="setTheme('runway')" style="border-radius: 20px; padding: 10px;">Runway</button>
+        <button onclick="setTheme('road')" style="border-radius: 20px; padding: 10px;">Road</button>
     </div>
-    <div style="position: absolute; z-index: 1000; bottom: 30px; left: 50%; transform: translatex(-50%); display: flex; gap: 10px;">
-        <button onclick="showGlasses(1)" style="padding: 10px;">style 1</button>
-        <button onclick="showGlasses(2)" style="padding: 10px;">style 2</button>
-    </div>"
 
-    <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        <a-assets>
-            <a-asset-item id="glasses1" src="assets/glasses1.glb"></a-asset-item>
-            <a-asset-item id="glasses2" src="assets/glasses2.glb"></a-asset-item>
-        </a-assets>
+    <div style="background: rgba(255,255,255,0.8); padding: 15px; display: flex; justify-content: center; gap: 20px;">
+        <div onclick="showCategory('glasses')" style="cursor:pointer">🕶️<br>Glasses</div>
+        <div onclick="showCategory('hats')" style="cursor:pointer">🎩<br>Hats</div>
+    </div>
+</div>
 
-        <a-camera active="false" position="0 0 0"></a-camera>
+<a-scene mindar-face="ghostMaterial: false" embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+        <a-asset-item id="glasses1" src="assets/glasses1.glb"></a-asset-item>
+        <a-asset-item id="hat1" src="assets/hat1.glb"></a-asset-item>
+        <img id="runway-img" src="https://cdn.pixabay.com/photo/2016/11/23/15/32/pedestrians-1853552_1280.jpg">
+    </a-assets>
 
-        <a-entity mindar-face-target="anchorIndex: 168">
-            <a-gltf-model id="firstpair" src="#glasses1" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005" visible="true"></a-gltf-model>
-            <a-gltf-model id="secondpair" src="#glasses2" position="0 0 0" scale="1 1 1" visible="false"></a-gltf-model>
-        </a-entity>
-    </a-scene>
+    <a-camera active="false" position="0 0 0"></a-camera>
 
-    <script>
-        const peer = new Peer(); // Create a new Peer connection
-        
-        // Show your unique ID
-        peer.on('open', (id) => {
-            document.getElementById('my-id').innerText = id;
-        });
+    <a-sky id="main-bg" color="#fff" opacity="0.5"></a-sky>
 
-        // When a friend calls you
-        peer.on('call', (call) => {
-            navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
-                call.answer(stream); // Send your face to them
-                call.on('stream', (remoteStream) => {
-                    // This is where you'd show the friend's video in a separate box
-                    console.log("Friend connected!");
-                });
-            });
-        });
+    <a-entity id="glasses-cat" mindar-face-target="anchorIndex: 168">
+        <a-gltf-model id="item-glasses1" src="#glasses1" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005" visible="true"></a-gltf-model>
+    </a-entity>
 
-        // Function to call your friend
-        function connectToFriend() {
-            const id = document.getElementById('friend-id').value;
-            navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
-                const call = peer.call(id, stream);
-                console.log("Calling friend...");
-            });
-        }
-    </script>
+    <a-entity id="hats-cat" mindar-face-target="anchorIndex: 10" visible="false">
+        <a-gltf-model id="item-hat1" src="#hat1" position="0 0 0" scale="1 1 1"></a-gltf-model>
+    </a-entity>
+
+</a-scene>
+
+<script>
+    function showCategory(cat) {
+        document.querySelector('#glasses-cat').setAttribute('visible', cat === 'glasses');
+        document.querySelector('#hats-cat').setAttribute('visible', cat === 'hats');
+    }
+
+    function setTheme(type) {
+        const sky = document.querySelector('#main-bg');
+        if(type === 'runway') sky.setAttribute('src', '#runway-img');
+        if(type === 'road') sky.setAttribute('color', '#555'); // Example: gray road color
+    }
+</script>
 </body>
 </html>
