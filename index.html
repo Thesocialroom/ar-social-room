@@ -352,8 +352,33 @@
      <main class="flex-1 overflow-auto px-6 py-6 pb-40"><!-- AR Runway/Stage -->
       <div class="mb-8">
        <p class="text-xs font-semibold text-cyan-300 mb-4 uppercase tracking-widest drop-shadow-lg">✨ Live Runway</p>
-       <div id="video-grid" class="grid grid-cols-2 gap-6"><!-- Video frames here -->
+      <div class="mb-8">
+        <p class="text-xs font-semibold text-cyan-300 mb-4 uppercase tracking-widest drop-shadow-lg">✨ Live Runway</p>
+  
+        <div id="video-grid" class="relative w-full h-[450px] rounded-3xl overflow-hidden neon-border bg-black">
+    
+          <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+            <a-assets>
+              <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+            </a-assets>
+
+            <a-camera active="false" position="0 0 0"></a-camera>
+
+            <a-entity mindar-face-target="anchorIndex: 168">
+              <a-gltf-model id="ar-glasses" src="#glassesModel" visible="false" scale="0.01 0.01 0.01" position="0 -0.1 0"></a-gltf-model>
+            </a-entity>
+
+            <a-entity mindar-face-target="anchorIndex: 10">
+              <a-gltf-model id="ar-hat" src="#hatModel" visible="false" position="0 0.2 0"></a-gltf-model>
+            </a-entity>
+
+            <a-entity mindar-face-target="anchorIndex: 152">
+              <a-gltf-model id="ar-necklace" src="#necklaceModel" visible="false" position="0 -0.5 0"></a-gltf-model>
+            </a-entity>
+
+          </a-scene>
        </div>
+      </div>
       </div><!-- Background Themes -->
       <div class="mb-10 glass rounded-2xl p-6">
        <p class="text-sm font-semibold text-white mb-4 uppercase tracking-widest">🌍 Background Theme</p>
