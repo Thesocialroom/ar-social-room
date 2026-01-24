@@ -1,81 +1,178 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en" class="h-full">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VibeStreak Social AR</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Fashion Studio | AI Try-On</title>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-face-aframe.prod.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Syne:wght@700&display=swap" rel="stylesheet">
+
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #ui { position: absolute; z-index: 1000; bottom: 20px; left: 20px; background: rgba(255,255,255,0.8); padding: 15px; border-radius: 10px; }
-        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { font-family: 'Space Grotesk', sans-serif; background: #0f0f23; color: white; margin: 0; overflow: hidden; }
+        .font-syne { font-family: 'Syne', sans-serif; }
+        .grad-neon { background: linear-gradient(135deg, #0f0f23 0%, #1a0033 100%); }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .neon-border { border: 2px solid #00d4ff; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+        
+        /* AR Container adjustment */
+        #ar-container {
+            width: 100%;
+            height: 45vh; /* Takes half the screen on mobile */
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+
+        /* Hide A-Frame UI */
+        .a-enter-vr { display: none; }
+        
+        /* Loading Screen overlay */
+        #loading-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 99;
+            background: #0f0f23;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
     </style>
 </head>
-<script>
-    function showGlasses(pairNumber) {
-        const pair1 = document.querySelector('#firstPair');
-        const pair2 = document.querySelector('#secondPair');
 
-        if (pairNumber === 1) {
-            pair1.setAttribute('visible', 'true');
-            pair2.setAttribute('visible', 'false');
-        } else {
-            pair1.setAttribute('visible', 'false');
-            pair2.setAttribute('visible', 'true');
+<body class="h-full overflow-hidden">
+
+    <div id="login-view" class="fixed inset-0 z-[100] grad-neon flex items-center justify-center p-6">
+        <div class="max-w-md w-full glass p-8 rounded-3xl neon-border text-center">
+            <h1 class="font-syne text-4xl mb-2 text-cyan-400">AR Studio</h1>
+            <p class="mb-8 text-white/60 text-sm uppercase tracking-widest">Digital Fashion Lab</p>
+            <input type="text" id="username-input" placeholder="Your Name" class="w-full bg-white/10 p-4 rounded-xl mb-4 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            <button id="start-btn" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-4 rounded-xl transition-all shadow-lg shadow-cyan-500/30">
+                ENTER STUDIO
+            </button>
+        </div>
+    </div>
+
+    <div id="studio-view" class="h-full w-full flex flex-col hidden overflow-auto pb-24">
+        
+        <header class="p-6 flex justify-between items-center glass border-b-0">
+            <div>
+                <h2 id="welcome-text" class="font-syne text-xl">Fashion Studio</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-[10px] text-cyan-400 uppercase font-bold" id="peer-id-display">Connecting...</span>
+                </div>
+            </div>
+            <button id="share-btn" class="glass px-4 py-2 rounded-full text-xs font-bold border-cyan-500/50 text-cyan-400">INVITE</button>
+        </header>
+
+        <main class="p-4 space-y-6">
+            <div id="ar-container" class="neon-border">
+                <div id="loading-overlay">
+                    <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="mt-4 text-xs font-bold text-cyan-500">IGNITING CAMERA...</p>
+                </div>
+
+                <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+                    <a-assets>
+                        <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+                    </a-assets>
+
+                    <a-camera active="false" position="0 0 0"></a-camera>
+
+                    <a-entity mindar-face-target="anchorIndex: 168">
+                        <a-gltf-model id="item-glasses" src="#glassesModel" position="0 -0.1 0" scale="0.01 0.01 0.01" rotation="0 0 0" visible="false"></a-gltf-model>
+                    </a-entity>
+                    
+                    <a-entity mindar-face-target="anchorIndex: 10">
+                         <a-sphere id="item-hat" radius="0.1" color="#ff00ff" position="0 0.5 0" visible="false"></a-sphere>
+                    </a-entity>
+                </a-scene>
+            </div>
+
+            <section>
+                <p class="text-[10px] font-bold text-cyan-400 mb-3 uppercase tracking-tighter">Inventory</p>
+                <div class="grid grid-cols-4 gap-3">
+                    <button class="ar-toggle-btn glass p-4 rounded-2xl flex flex-col items-center gap-2" data-item="glasses">
+                        <span class="text-2xl">👓</span>
+                        <span class="text-[10px] font-bold">GLASSES</span>
+                    </button>
+                    <button class="ar-toggle-btn glass p-4 rounded-2xl flex flex-col items-center gap-2" data-item="hat">
+                        <span class="text-2xl">🎩</span>
+                        <span class="text-[10px] font-bold">HAT</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <div class="fixed bottom-0 left-0 right-0 p-6 glass border-t border-white/10 flex justify-center gap-8">
+            <button id="snap-photo" class="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-xl">
+                📸
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LOGIN LOGIC ---
+        const startBtn = document.getElementById('start-btn');
+        const loginView = document.getElementById('login-view');
+        const studioView = document.getElementById('studio-view');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        startBtn.addEventListener('click', () => {
+            const name = document.getElementById('username-input').value;
+            if(!name) return alert("Enter your name!");
+            
+            loginView.classList.add('hidden');
+            studioView.classList.remove('hidden');
+            document.getElementById('welcome-text').innerText = `${name}'s Studio`;
+            
+            // Start PeerJS after entering
+            initPeer();
+        });
+
+        // --- 2. AR TOGGLE LOGIC ---
+        document.querySelectorAll('.ar-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.getAttribute('data-item');
+                const model = document.getElementById(`item-${type}`);
+                
+                // Toggle logic
+                const isVisible = model.getAttribute('visible') === true;
+                model.setAttribute('visible', !isVisible);
+                
+                // Visual feedback on button
+                btn.style.borderColor = !isVisible ? '#00d4ff' : 'transparent';
+                btn.classList.toggle('neon-border');
+            });
+        });
+
+        // Hide AR loading when tracking starts
+        document.querySelector('a-scene').addEventListener('ready', () => {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => loadingOverlay.remove(), 500);
+        });
+
+        // --- 3. PEERJS (PRE-SETUP) ---
+        function initPeer() {
+            const peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('peer-id-display').innerText = `ID: ${id}`;
+            });
+            
+            // Logic for sharing/calling will go here in your next step
+            document.getElementById('share-btn').onclick = () => {
+                const id = document.getElementById('peer-id-display').innerText;
+                navigator.clipboard.writeText(id.replace('ID: ', ''));
+                alert("Room ID copied! Send to a friend.");
+            };
         }
-    }
-</script>
-<body>
-
-    <div id="ui-container" style="position: absolute; z-index: 1000; width: 100%; bottom: 20px; text-align: center;">
-    
-    <div style="margin-bottom: 20px;">
-        <button onclick="setTheme('runway')" style="border-radius: 20px; padding: 10px;">Runway</button>
-        <button onclick="setTheme('road')" style="border-radius: 20px; padding: 10px;">Road</button>
-    </div>
-
-    <div style="background: rgba(255,255,255,0.8); padding: 15px; display: flex; justify-content: center; gap: 20px;">
-        <div onclick="showCategory('glasses')" style="cursor:pointer">🕶️<br>Glasses</div>
-        <div onclick="showCategory('hats')" style="cursor:pointer">🎩<br>Hats</div>
-    </div>
-</div>
-
-<a-scene mindar-face="ghostMaterial: false" embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-    
-    <a-assets>
-        <a-asset-item id="glasses1" src="assets/glasses1.glb"></a-asset-item>
-        <a-asset-item id="hat1" src="assets/hat1.glb"></a-asset-item>
-        <img id="runway-img" src="https://cdn.pixabay.com/photo/2016/11/23/15/32/pedestrians-1853552_1280.jpg">
-    </a-assets>
-
-    <a-camera active="false" position="0 0 0"></a-camera>
-
-    <a-sky id="main-bg" color="#fff" opacity="0.5"></a-sky>
-
-    <a-entity id="glasses-cat" mindar-face-target="anchorIndex: 168">
-        <a-gltf-model id="item-glasses1" src="#glasses1" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005" visible="true"></a-gltf-model>
-    </a-entity>
-
-    <a-entity id="hats-cat" mindar-face-target="anchorIndex: 10" visible="false">
-        <a-gltf-model id="item-hat1" src="#hat1" position="0 0 0" scale="1 1 1"></a-gltf-model>
-    </a-entity>
-
-</a-scene>
-
-<script>
-    function showCategory(cat) {
-        document.querySelector('#glasses-cat').setAttribute('visible', cat === 'glasses');
-        document.querySelector('#hats-cat').setAttribute('visible', cat === 'hats');
-    }
-
-    function setTheme(type) {
-        const sky = document.querySelector('#main-bg');
-        if(type === 'runway') sky.setAttribute('src', '#runway-img');
-        if(type === 'road') sky.setAttribute('color', '#555'); // Example: gray road color
-    }
-</script>
+    </script>
 </body>
 </html>
