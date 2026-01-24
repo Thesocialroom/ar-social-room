@@ -3,175 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Fashion Studio | AI Try-On</title>
+    <title>AR Fashion Studio</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-face-aframe.prod.js"></script>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Syne:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Space Grotesk', sans-serif; background: #0f0f23; color: white; margin: 0; overflow: hidden; }
+        body { font-family: 'Space Grotesk', sans-serif; background: #0f0f23; color: white; margin: 0; }
         .font-syne { font-family: 'Syne', sans-serif; }
         .grad-neon { background: linear-gradient(135deg, #0f0f23 0%, #1a0033 100%); }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .neon-border { border: 2px solid #00d4ff; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
-        
-        /* AR Container adjustment */
-        #ar-container {
-            width: 100%;
-            height: 45vh; /* Takes half the screen on mobile */
-            border-radius: 24px;
-            overflow: hidden;
-            position: relative;
-            background: #000;
-        }
-
-        /* Hide A-Frame UI */
+        #ar-stage { width: 100%; height: 400px; border-radius: 24px; overflow: hidden; position: relative; background: #000; border: 2px solid #00d4ff; }
         .a-enter-vr { display: none; }
-        
-        /* Loading Screen overlay */
-        #loading-overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 99;
-            background: #0f0f23;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
-        }
     </style>
 </head>
 
-<body class="h-full overflow-hidden">
-
+<body class="h-full">
     <div id="login-view" class="fixed inset-0 z-[100] grad-neon flex items-center justify-center p-6">
         <div class="max-w-md w-full glass p-8 rounded-3xl neon-border text-center">
-            <h1 class="font-syne text-4xl mb-2 text-cyan-400">AR Studio</h1>
-            <p class="mb-8 text-white/60 text-sm uppercase tracking-widest">Digital Fashion Lab</p>
-            <input type="text" id="username-input" placeholder="Your Name" class="w-full bg-white/10 p-4 rounded-xl mb-4 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            <button id="start-btn" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-4 rounded-xl transition-all shadow-lg shadow-cyan-500/30">
-                ENTER STUDIO
-            </button>
+            <h1 class="font-syne text-4xl mb-2 text-cyan-400">AR Fashion</h1>
+            <input type="text" id="username-input" placeholder="Your Name" class="w-full bg-white/10 p-4 rounded-xl mb-4 text-white">
+            <button id="start-btn" class="w-full bg-cyan-500 text-black font-bold py-4 rounded-xl">ENTER STUDIO</button>
         </div>
     </div>
 
-    <div id="studio-view" class="h-full w-full flex flex-col hidden overflow-auto pb-24">
-        
-        <header class="p-6 flex justify-between items-center glass border-b-0">
-            <div>
-                <h2 id="welcome-text" class="font-syne text-xl">Fashion Studio</h2>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span class="text-[10px] text-cyan-400 uppercase font-bold" id="peer-id-display">Connecting...</span>
-                </div>
-            </div>
-            <button id="share-btn" class="glass px-4 py-2 rounded-full text-xs font-bold border-cyan-500/50 text-cyan-400">INVITE</button>
+    <div id="studio-view" class="hidden h-full w-full flex flex-col relative overflow-auto">
+        <header class="px-6 py-4 flex items-center justify-between glass">
+            <h1 class="font-syne text-xl font-bold">Studio</h1>
+            <div id="peer-id-display" class="text-[10px] text-cyan-400 font-bold tracking-widest uppercase">Connecting...</div>
         </header>
 
-        <main class="p-4 space-y-6">
-            <div id="ar-container" class="neon-border">
-                <div id="loading-overlay">
-                    <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="mt-4 text-xs font-bold text-cyan-500">IGNITING CAMERA...</p>
-                </div>
-
+        <main class="flex-1 px-6 py-6 pb-40">
+            <div id="ar-stage" class="mb-8">
                 <a-scene mindar-face embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
                     <a-assets>
-                        <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+                        <a-asset-item id="glassesModel" src="assets/glasses1.glb"></a-asset-item>
+                        <a-asset-item id="hatModel" src="assets/hat1.glb"></a-asset-item>
                     </a-assets>
-
                     <a-camera active="false" position="0 0 0"></a-camera>
+                    
+                    <a-sky id="studio-sky" color="#000" opacity="0.6"></a-sky>
 
                     <a-entity mindar-face-target="anchorIndex: 168">
-                        <a-gltf-model id="item-glasses" src="#glassesModel" position="0 -0.1 0" scale="0.01 0.01 0.01" rotation="0 0 0" visible="false"></a-gltf-model>
+                        <a-gltf-model id="ar-glasses" src="#glassesModel" visible="false" position="0 -0.1 0.3" scale="0.0005 0.0005 0.0005"></a-gltf-model>
                     </a-entity>
-                    
                     <a-entity mindar-face-target="anchorIndex: 10">
-                         <a-sphere id="item-hat" radius="0.1" color="#ff00ff" position="0 0.5 0" visible="false"></a-sphere>
+                        <a-gltf-model id="ar-hat" src="#hatModel" visible="false" position="0 0.1 0" scale="1 1 1"></a-gltf-model>
                     </a-entity>
                 </a-scene>
             </div>
 
-            <section>
-                <p class="text-[10px] font-bold text-cyan-400 mb-3 uppercase tracking-tighter">Inventory</p>
-                <div class="grid grid-cols-4 gap-3">
-                    <button class="ar-toggle-btn glass p-4 rounded-2xl flex flex-col items-center gap-2" data-item="glasses">
-                        <span class="text-2xl">👓</span>
-                        <span class="text-[10px] font-bold">GLASSES</span>
-                    </button>
-                    <button class="ar-toggle-btn glass p-4 rounded-2xl flex flex-col items-center gap-2" data-item="hat">
-                        <span class="text-2xl">🎩</span>
-                        <span class="text-[10px] font-bold">HAT</span>
-                    </button>
+            <div class="mb-10 glass rounded-2xl p-6">
+                <p class="text-xs font-bold text-white mb-4 uppercase">🌍 Background Theme</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="changeTheme('purple')" class="h-20 rounded-xl bg-purple-900 border border-white/20">Luxury Runway</button>
+                    <button onclick="changeTheme('blue')" class="h-20 rounded-xl bg-blue-500 border border-white/20">Beach Paradise</button>
+                    <button onclick="changeTheme('gray')" class="h-20 rounded-xl bg-gray-800 border border-white/20">City Lights</button>
+                    <button onclick="changeTheme('green')" class="h-20 rounded-xl bg-green-900 border border-white/20">Nature Forest</button>
                 </div>
-            </section>
-        </main>
+            </div>
 
-        <div class="fixed bottom-0 left-0 right-0 p-6 glass border-t border-white/10 flex justify-center gap-8">
-            <button id="snap-photo" class="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-xl">
-                📸
-            </button>
-        </div>
+            <div class="glass rounded-2xl p-6">
+                <p class="text-xs font-bold text-white mb-4 uppercase">👗 Fashion Items</p>
+                <div class="grid grid-cols-4 gap-4">
+                    <button onclick="toggleAR('glasses')" class="flex flex-col items-center gap-2 p-4 glass rounded-xl"><span>👓</span><span class="text-[10px]">GLASSES</span></button>
+                    <button onclick="toggleAR('hat')" class="flex flex-col items-center gap-2 p-4 glass rounded-xl"><span>🎩</span><span class="text-[10px]">HAT</span></button>
+                    <button onclick="alert('Add Jewelry GLB')" class="flex flex-col items-center gap-2 p-4 glass rounded-xl"><span>✨</span><span class="text-[10px]">NECKLACE</span></button>
+                    <button onclick="alert('Add Earrings GLB')" class="flex flex-col items-center gap-2 p-4 glass rounded-xl"><span>💍</span><span class="text-[10px]">EARRINGS</span></button>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // --- 1. LOGIN LOGIC ---
-        const startBtn = document.getElementById('start-btn');
-        const loginView = document.getElementById('login-view');
-        const studioView = document.getElementById('studio-view');
-        const loadingOverlay = document.getElementById('loading-overlay');
-
-        startBtn.addEventListener('click', () => {
-            const name = document.getElementById('username-input').value;
-            if(!name) return alert("Enter your name!");
-            
-            loginView.classList.add('hidden');
-            studioView.classList.remove('hidden');
-            document.getElementById('welcome-text').innerText = `${name}'s Studio`;
-            
-            // Start PeerJS after entering
-            initPeer();
+        // LOGIN LOGIC
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('studio-view').classList.remove('hidden');
         });
 
-        // --- 2. AR TOGGLE LOGIC ---
-        document.querySelectorAll('.ar-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const type = btn.getAttribute('data-item');
-                const model = document.getElementById(`item-${type}`);
-                
-                // Toggle logic
-                const isVisible = model.getAttribute('visible') === true;
-                model.setAttribute('visible', !isVisible);
-                
-                // Visual feedback on button
-                btn.style.borderColor = !isVisible ? '#00d4ff' : 'transparent';
-                btn.classList.toggle('neon-border');
-            });
-        });
+        // AR TOGGLE LOGIC
+        function toggleAR(item) {
+            const el = document.getElementById('ar-' + item);
+            const isVisible = el.getAttribute('visible');
+            el.setAttribute('visible', !isVisible);
+        }
 
-        // Hide AR loading when tracking starts
-        document.querySelector('a-scene').addEventListener('ready', () => {
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => loadingOverlay.remove(), 500);
-        });
-
-        // --- 3. PEERJS (PRE-SETUP) ---
-        function initPeer() {
-            const peer = new Peer();
-            peer.on('open', (id) => {
-                document.getElementById('peer-id-display').innerText = `ID: ${id}`;
-            });
-            
-            // Logic for sharing/calling will go here in your next step
-            document.getElementById('share-btn').onclick = () => {
-                const id = document.getElementById('peer-id-display').innerText;
-                navigator.clipboard.writeText(id.replace('ID: ', ''));
-                alert("Room ID copied! Send to a friend.");
-            };
+        // THEME LOGIC
+        function changeTheme(color) {
+            const sky = document.querySelector('#studio-sky');
+            const colors = { purple: '#2d1b3d', blue: '#00d4ff', gray: '#16213e', green: '#1b4332' };
+            sky.setAttribute('color', colors[color]);
         }
     </script>
 </body>
