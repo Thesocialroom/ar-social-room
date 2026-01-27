@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AR Fashion Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-face-aframe.prod.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Syne:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     body {
@@ -286,26 +284,6 @@
         grid-template-columns: repeat(4, 1fr);
       }
     }
-    #video-grid video {
-      position: absolute;
-      top:0;
-      left:0;
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover;
-      z-index: 1;
-    }
-    a-scene{
-      width: 100%;
-      height: 100%;
-    }
-    a-entity, a-gltf-model {
-      z-index: 999 !important;
-    }
-    #video-grid video{
-      z-index: 1 !important;
-      position: absolute;
-    }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -372,28 +350,8 @@
      <main class="flex-1 overflow-auto px-6 py-6 pb-40"><!-- AR Runway/Stage -->
       <div class="mb-8">
        <p class="text-xs font-semibold text-cyan-300 mb-4 uppercase tracking-widest drop-shadow-lg">✨ Live Runway</p>
-  
-        <div id="video-grid" class="grid grid-cols-2 gap-6 relative" style="min-height: 400px;">
-    
-          <a-scene mindar-face="autostart: false;" embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-
-            <a-camera active="false" position="0 0 0"></a-camera>
-
-            <a-entity mindar-face-target="anchorIndex: 168">
-              <a-gltf-model id="ar-glasses" src="#glassesModel" visible="false" scale="0.01 0.01 0.01" position="0 -0.1 0"></a-gltf-model>
-            </a-entity>
-
-            <a-entity mindar-face-target="anchorIndex: 10">
-              <a-gltf-model id="ar-hat" src="#hatModel" visible="false" position="0 0.2 0"></a-gltf-model>
-            </a-entity>
-
-            <a-entity mindar-face-target="anchorIndex: 152">
-              <a-gltf-model id="ar-necklace" src="#necklaceModel" visible="false" position="0 -0.5 0"></a-gltf-model>
-            </a-entity>
-
-          </a-scene>
+       <div id="video-grid" class="grid grid-cols-2 gap-6"><!-- Video frames here -->
        </div>
-      </div>
       </div><!-- Background Themes -->
       <div class="mb-10 glass rounded-2xl p-6">
        <p class="text-sm font-semibold text-white mb-4 uppercase tracking-widest">🌍 Background Theme</p>
@@ -607,36 +565,6 @@
       document.getElementById('studio-room-name').textContent = room.room_name;
       document.getElementById('studio-user').textContent = currentUser.name;
       document.getElementById('invite-code').textContent = room.room_id;
-    // 1. Start the AR Camera
-    const sceneEl = document.querySelector('a-scene');
-    if (sceneEl) {
-        const arSystem = sceneEl.systems["mindar-face-system"];
-        if (arSystem && !arSystem.active) arSystem.start();
-    }
-
-    // 2. Protect the AR Scene while clearing other content
-    const videoGrid = document.getElementById('video-grid');
-    // Remove only the participant divs, NOT the a-scene
-    const participants = videoGrid.querySelectorAll('.video-card');
-    participants.forEach(p => p.remove());
-
-    // 3. Create boxes ONLY for other participants
-    room.participants.forEach((pid, index) => {
-        if (pid !== currentUser.id) { // Don't create a box for yourself (you are the AR camera)
-            const frame = document.createElement('div');
-            frame.className = 'video-card glass-bright absolute top-4 right-4 w-32 h-40 z-20';
-            frame.innerHTML = `<div class="flex items-center justify-center h-full">
-                                <span class="text-xs text-white">Friend</span>
-                               </div>`;
-            videoGrid.appendChild(frame);
-        }
-    });
-
-    // Helper function (you can place this at the very bottom of your script)
-    function startAR(scene) {
-        const arSystem = scene.systems["mindar-face-system"];
-        if (arSystem) arSystem.start();
-    }
 
       const videoGrid = document.getElementById('video-grid');
       videoGrid.innerHTML = '';
