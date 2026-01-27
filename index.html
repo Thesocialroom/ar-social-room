@@ -299,6 +299,13 @@
       width: 100%;
       height: 100%;
     }
+    a-entity, a-gltf-model {
+      z-index: 999 !important;
+    }
+    #video-grid video{
+      z-index: 1 !important;
+      position: absolute;
+    }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -368,7 +375,7 @@
   
         <div id="video-grid" class="grid grid-cols-2 gap-6 relative" style="min-height: 400px;">
     
-          <a-scene mindar-face="autostart: true;" embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+          <a-scene mindar-face="autostart: false;" embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
             <a-camera active="false" position="0 0 0"></a-camera>
 
@@ -600,15 +607,30 @@
       document.getElementById('studio-room-name').textContent = room.room_name;
       document.getElementById('studio-user').textContent = currentUser.name;
       document.getElementById('invite-code').textContent = room.room_id;
-      // 1. Detection Logic: Initialize AR after entering the room
+    // 1. Start the AR Camera
     const sceneEl = document.querySelector('a-scene');
     if (sceneEl) {
-        if (sceneEl.hasLoaded) {
-            startAR(sceneEl);
-        } else {
-            sceneEl.addEventListener('loaded', () => startAR(sceneEl));
-        }
+        const arSystem = sceneEl.systems["mindar-face-system"];
+        if (arSystem && !arSystem.active) arSystem.start();
     }
+
+    // 2. Protect the AR Scene while clearing other content
+    const videoGrid = document.getElementById('video-grid');
+    // Remove only the participant divs, NOT the a-scene
+    const participants = videoGrid.querySelectorAll('.video-card');
+    participants.forEach(p => p.remove());
+
+    // 3. Create boxes ONLY for other participants
+    room.participants.forEach((pid, index) => {
+        if (pid !== currentUser.id) { // Don't create a box for yourself (you are the AR camera)
+            const frame = document.createElement('div');
+            frame.className = 'video-card glass-bright absolute top-4 right-4 w-32 h-40 z-20';
+            frame.innerHTML = `<div class="flex items-center justify-center h-full">
+                                <span class="text-xs text-white">Friend</span>
+                               </div>`;
+            videoGrid.appendChild(frame);
+        }
+    });
 
     // Helper function (you can place this at the very bottom of your script)
     function startAR(scene) {
