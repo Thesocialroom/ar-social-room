@@ -1,0 +1,7 @@
+body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background-color: #f0f0f0; }
+h1 { color: #333; }
+#ar-section { position: relative; }
+#video, #ar-canvas { width: 100%; max-width: 640px; border: 2px solid #ccc; }
+button { margin: 10px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+button:hover { background-color: #0056b3; }
+input { padding: 10px; margin: 10px; width: 200px; }
